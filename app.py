@@ -53,6 +53,10 @@ def webhook():
                     if(newJSON['intents'][0]['intent'] == 'Stock_Price' and newJSON['output']['text'][0] == 'INTENT'):
                         message = stock.getstockprice(newJSON['entities'][0]['value'])
                         send_message(sender_id, message)
+                    if(newJSON['intents'][0]['intent'] == 'Save_For_Retirement'):
+                        message = newJSON['output']['text'][0]
+                        send_message(sender_id, message)
+                        
 
                     elif(message_text == "test"):
                         send_message(sender_id, "test success!")

@@ -17,7 +17,7 @@ USERNAME = "17f9272a-a613-4cd4-b4a2-d2997333d8e3"
 PASSWORD = "lTzpYkbjTsKE"
 WORKSPACE_ID = "a347dca1-629e-4bbb-af35-d51aae52bf7a"
 context = {}
-Retirement = {}
+r = {"complete":False}
 
 
 @app.route('/', methods=['GET'])
@@ -58,12 +58,33 @@ def webhook():
                     elif (newJSON['intents'][0]['intent'] == 'Advice' and newJSON['output']['text'][0] == 'INTENT'):
                         f = open("InvesmentTips.txt", "r")
                         file = f.readlines()
-                        r = int(random.random() * 300)
-                        send_message(sender_id, "investment tip #%s" % (file[r]))
+                        rr = int(random.random() * 300)
+                        send_message(sender_id, "investment tip #%s" % (file[rr]))
                         f.close()
                     elif message_text == "test":
                         send_message(sender_id, "test success!")
+                    elif (newJSON['intents'][0]['intent'] == 'Save_For_retirement'):
+                        r.update({"retire":True})
+                    elif (newJSON['output']['text'][0] == 'How old are you right now?'):
+                        r.update({"ageRetire":newJSON['context']['age'] })
+                    elif (newJSON['output']['text'][0] == 'How much money do you have saved up?'):
+                        r.update({"ageNow":newJSON['context']['age'] })
+                    elif (newJSON['output']['text'][0] == "What's your current income?"):
+                        r.update({"savings":newJSON['context']['age'] })
+                    elif (newJSON['output']['text'][0] == 'What is up my dude'):
+                        r.update({"incomeCurrent":newJSON['context']['age'] })
+                        r.update({"complete":True})
+                    elif (r["complete"]):
+                        x, y = retirement.calculate(r['ageNow'], r['ageRetire'], r['incomeCurrent'], r['savings']))
+                        r["complete"] = False
+                        send_message(sender_id, "If you save the recommended 10% of your income every year, you will retire with $%d, which will last you %d years!" %(x, y))
+                    else:
+                        send_message(sender_id, newJSON['output']['text'][0])
+                    
 
+
+                    
+                    """
                     elif (newJSON['intents'][0]['intent'] == 'FutureAge'):
                         message = newJSON['output']['text'][0]
                         Retirement.update({'rAge': newJSON['entities'][3]['value']})
@@ -84,9 +105,8 @@ def webhook():
                             send_message(sender_id,
                                          "If you save 10% of your income for %d years, you will retire with $%d" % (
                                          x, y))
-                    else:
-                        send_message(sender_id, newJSON['output']['text'][0])
-
+                    """
+                    
 
 
 

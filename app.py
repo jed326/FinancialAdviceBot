@@ -5,6 +5,7 @@ from datetime import datetime
 from watson_developer_cloud import *
 import process
 import stock
+import random
 
 import requests
 from flask import Flask, request
@@ -53,7 +54,13 @@ def webhook():
                     if(newJSON['intents'][0]['intent'] == 'Stock_Price' and newJSON['output']['text'][0] == 'INTENT'):
                         message = stock.getstockprice(newJSON['entities'][0]['value'])
                         send_message(sender_id, message)
-                    if(newJSON['intents'][0]['intent'] == 'Save_For_Retirement'):
+                    elif(newJSON['intents'][0]['intent'] == 'Advice' and newJSON['output']['text'][0] == 'INTENT'):
+                        f = open("InvesmentTips.txt", "r")
+                        file = f.readlines()
+                        r = int(random.random()*300)
+                        send_message(sender_id, "investment tip #%s" % (file[r]))
+                        f.close()
+                    elif(newJSON['intents'][0]['intent'] == 'Save_For_Retirement'):
                         message = newJSON['output']['text'][0]
                         send_message(sender_id, message)
                         

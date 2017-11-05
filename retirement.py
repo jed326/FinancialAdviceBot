@@ -6,13 +6,13 @@ import math
 #current annual income
 #what percent of your annual income you will invest
 #current savings
-def calculate(age, retireAge, income, percentPerYear, currentSavings):
-    years = retireAge - age
+def calculate(cAge, rAge, cIncome, percentPerYear = 10, savings):
+    years = rAge - cAge
 
     #interest + contributions formula adapted from a tab that's not open anymore
     #assumes 6.6% return adjusted for inflation
     inflation = 0.066
-    moneyAtRetirement = int(currentSavings * math.pow(1 + inflation, years) + \
+    moneyAtRetirement = int(savings * math.pow(1 + inflation, years) + \
         ((percentPerYear / 100) * income * (math.pow(1 + inflation, years) - 1)) / inflation)
 
     #while loop because I'm too lazy to figure out another formula
@@ -20,7 +20,7 @@ def calculate(age, retireAge, income, percentPerYear, currentSavings):
     
     countYears = 0
     while tempMoney > 0 and countYears < 100:
-        tempMoney = tempMoney - (0.9 * income)
+        tempMoney = tempMoney - (0.9 * cIncome)
         tempMoney = tempMoney * (1.066)
         countYears += 1
 

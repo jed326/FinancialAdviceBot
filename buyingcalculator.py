@@ -79,7 +79,18 @@ def car():
 
     
            
-def house():
+def house(total, down, closing, mR, PMI, propertytax, years, income):
     
-    
-print(prompting())
+    loan = total-down
+    flattax = (PMI+propertytax)/1200*loan
+    months = years*12
+    mR /= 1200
+    monthlycomp = mR*loan/(1-(1+mR)**(months*-1))
+    percent = 12*(monthlycomp+flattax)/(income)
+    percent = "%.2f"% (percent*100)
+    if(percent < 25):
+        return("This house seems to be in your price range! With some careful planning you should be all set to purchase it.")
+    else:
+        return("You should think more about your finances and how expensive of a house you can afford")
+
+print(house(300000,100000,5000,6.5,.5,1.25,30,100000))

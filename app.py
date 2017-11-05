@@ -3,6 +3,8 @@ import sys
 import json
 from datetime import datetime
 from watson_developer_cloud import *
+import process
+import stock
 
 import requests
 from flask import Flask, request
@@ -45,11 +47,17 @@ def webhook():
                     sender_id = messaging_event["sender"]["id"]        # the facebook ID of the person sending you the message
                     recipient_id = messaging_event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
                     message_text = messaging_event["message"]["text"]  # the message's text
-                    newstring = handle_command(message_text)
-                    if(message_text == "test"):
+                    newJSON = process.handle_command(message_text)
+                    message = ''
+
+                    if(newJSON['intents'][0]['intent'] == 'Stock_Price' and newJSON['output']['text'][0] == 'INTENT'):
+                        message = stock.getstockprice(newJSON['entities'][0]['value'])
+                        send_message(sender_id, message)
+
+                    elif(message_text == "test"):
                         send_message(sender_id, "test success!")
                     else:
-                        send_message(sender_id, newstring)
+                        send_message(sender_id, newJSON['output']['text'][0])
 
                 if messaging_event.get("delivery"):  # delivery confirmation
                     pass
@@ -62,22 +70,7 @@ def webhook():
 
     return "ok", 200
 
-def handle_command(command):
-    """Receives commands directed at the bot and determines if they are valid commands.
-    If so, then acts on the commands. If not, returns back what it needs for clarification."""
-    conversation = conversation_v1.ConversationV1(
-        username = USERNAME,
-        password = PASSWORD,
-        version = '2016-06-20'
-        )
 
-    responseFromWatson = conversation.message(
-        workspace_id = WORKSPACE_ID,
-        message_input = {'text': command},
-        context = context
-        )
-
-    return responseFromWatson['output']['text'][0]
 
 def send_message(recipient_id, message_text):
 

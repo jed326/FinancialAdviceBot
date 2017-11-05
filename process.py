@@ -19,4 +19,4 @@ def handle_command(command):
         context = context
         )
 
-    return responseFromWatson['output']['text'][0]
+    return responseFromWatson

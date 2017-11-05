@@ -2,11 +2,17 @@ import os
 import sys
 import json
 from datetime import datetime
+from watson_developer_cloud import *
 
 import requests
 from flask import Flask, request
 
 app = Flask(__name__)
+
+USERNAME = "17f9272a-a613-4cd4-b4a2-d2997333d8e3"
+PASSWORD = "lTzpYkbjTsKE"
+WORKSPACE_ID = "a347dca1-629e-4bbb-af35-d51aae52bf7a"
+context = {}
 
 
 @app.route('/', methods=['GET'])
@@ -39,7 +45,11 @@ def webhook():
                     sender_id = messaging_event["sender"]["id"]        # the facebook ID of the person sending you the message
                     recipient_id = messaging_event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
                     message_text = messaging_event["message"]["text"]  # the message's text
-                    send_message(sender_id, "roger that hehexd!")
+                    newstring = handle_command(message_text)
+                    if(message_text == "test"):
+                        send_message(sender_id, "test success!")
+                    else:
+                        send_message(sender_id, newstring)
 
                 if messaging_event.get("delivery"):  # delivery confirmation
                     pass
@@ -52,6 +62,22 @@ def webhook():
 
     return "ok", 200
 
+def handle_command(command):
+    """Receives commands directed at the bot and determines if they are valid commands.
+    If so, then acts on the commands. If not, returns back what it needs for clarification."""
+    conversation = conversation_v1.ConversationV1(
+        username = USERNAME,
+        password = PASSWORD,
+        version = '2016-06-20'
+        )
+
+    responseFromWatson = conversation.message(
+        workspace_id = WORKSPACE_ID,
+        message_input = {'text': command},
+        context = context
+        )
+
+    return responseFromWatson['output']['text'][0]
 
 def send_message(recipient_id, message_text):
 

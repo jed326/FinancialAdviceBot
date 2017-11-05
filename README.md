@@ -1,6 +1,8 @@
 # FinancialAdviceBot
 Facebook Messenger Bot for Financial Advice
 
+# Watson Developer Cloud Python SDK
+
 To install, use `pip`:
 
 ```bash

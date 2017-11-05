@@ -42,3 +42,9 @@ Password
 ```bash
 lTzpYkbjTsKE
 ```
+
+# Dependencies
+* requests
+* pysolr >= 3.3, <4.0
+* argparse >= 1.3.0
+* pyOpenSSL >= 16.2.0

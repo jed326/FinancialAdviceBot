@@ -47,12 +47,16 @@ def webhook():
                     sender_id = messaging_event["sender"]["id"]        # the facebook ID of the person sending you the message
                     recipient_id = messaging_event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
                     message_text = messaging_event["message"]["text"]  # the message's text
-                    newJSON = process.handle_command(message_text)
+                    newJSON, context = process.handle_command(message_text, context)
                     message = ''
 
                     if(newJSON['intents'][0]['intent'] == 'Stock_Price' and newJSON['output']['text'][0] == 'INTENT'):
                         message = stock.getstockprice(newJSON['entities'][0]['value'])
                         send_message(sender_id, message)
+                    if(newJSON['intents'][0]['intent'] == 'Save_For_Retirement'):
+                        message = newJSON['output']['text'][0]
+                        send_message(sender_id, message)
+                        
 
                     elif(message_text == "test"):
                         send_message(sender_id, "test success!")

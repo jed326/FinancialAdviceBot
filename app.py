@@ -34,7 +34,6 @@ def verify():
 
 @app.route('/', methods=['POST'])
 def webhook():
-
     # endpoint for processing incoming messaging events
 
     data = request.get_json()
@@ -46,62 +45,55 @@ def webhook():
             for messaging_event in entry["messaging"]:
 
                 if messaging_event.get("message"):  # someone sent us a message
-
-                    sender_id = messaging_event["sender"]["id"]        # the facebook ID of the person sending you the message
+                    global context
+                    sender_id = messaging_event["sender"]["id"]  # the facebook ID of the person sending you the message
                     recipient_id = messaging_event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
                     message_text = messaging_event["message"]["text"]  # the message's text
                     newJSON, context = process.handle_command(message_text, context)
                     message = ''
 
-                    if(newJSON['intents'][0]['intent'] == 'Stock_Price' and newJSON['output']['text'][0] == 'INTENT'):
+                    if (newJSON['intents'][0]['intent'] == 'Stock_Price' and newJSON['output']['text'][0] == 'INTENT'):
                         message = stock.getstockprice(newJSON['entities'][0]['value'])
                         send_message(sender_id, message)
-                    elif(newJSON['intents'][0]['intent'] == 'Advice' and newJSON['output']['text'][0] == 'INTENT'):
+                    elif (newJSON['intents'][0]['intent'] == 'Advice' and newJSON['output']['text'][0] == 'INTENT'):
                         f = open("InvesmentTips.txt", "r")
                         file = f.readlines()
-                        r = int(random.random()*300)
+                        r = int(random.random() * 300)
                         send_message(sender_id, "investment tip #%s" % (file[r]))
                         f.close()
-                    elif(newJSON['intents'][0]['intent'] == 'FutureAge'):
+                    elif message_text == "test":
+                        send_message(sender_id, "test success!")
+
+                    elif (newJSON['intents'][0]['intent'] == 'FutureAge'):
                         message = newJSON['output']['text'][0]
-                        retirement.update({'rAge':newJSON['entities'][3]['value']})
+                        Retirement.update({'rAge': newJSON['entities'][3]['value']})
                         send_message(sender_id, message)
-                    elif(newJSON['intents'][0]['intent'] == 'CurrentAge'):
+                    elif (newJSON['intents'][0]['intent'] == 'CurrentAge'):
                         message = newJSON['output']['text'][0]
-                        retirement.update({'cAge':newJSON['entities'][2]['value']})
+                        Retirement.update({'cAge': newJSON['entities'][2]['value']})
                         send_message(sender_id, message)
-                    elif(newJSON['intents'][0]['intent'] == 'Money'):
+                    elif (newJSON['intents'][0]['intent'] == 'Money'):
                         message = newJSON['output']['text'][0]
-                        if(message == "What's your current income?"):
-                            retirement.update({'savings':newJSON['entities'][3]['value']})
+                        if (message == "What's your current income?"):
+                            Retirement.update({'savings': newJSON['entities'][3]['value']})
                             send_message(sender_id, message)
                         else:
-                            retirement.update({'income':newJSON['entities'][3]['value']})
-                            x, y = retirement.calculate(Retirement['cAge'], Retirement['rAge'], Retirement['income'], Retirement['savings'])
-                            send_message(sender_id, "If you save 10% of your income for %d years, you will retire with $%d" %(x, y)
-                            
-                        
-
-                    elif(message_text == "test"):
-                        send_message(sender_id, "test success!")
+                            Retirement.update({'income': newJSON['entities'][3]['value']})
+                            x, y = retirement.calculate(Retirement['cAge'], Retirement['rAge'], Retirement['income'],
+                                                        Retirement['savings'])
+                            send_message(sender_id,
+                                         "If you save 10% of your income for %d years, you will retire with $%d" % (
+                                         x, y))
                     else:
                         send_message(sender_id, newJSON['output']['text'][0])
 
-                if messaging_event.get("delivery"):  # delivery confirmation
-                    pass
 
-                if messaging_event.get("optin"):  # optin confirmation
-                    pass
 
-                if messaging_event.get("postback"):  # user clicked/tapped "postback" button in earlier message
-                    pass
 
     return "ok", 200
 
 
-
 def send_message(recipient_id, message_text):
-
     log("sending message to {recipient}: {text}".format(recipient=recipient_id, text=message_text))
 
     params = {
@@ -130,7 +122,8 @@ def log(msg, *args, **kwargs):  # simple wrapper for logging to stdout on heroku
             msg = json.dumps(msg)
         else:
             msg = unicode(msg).format(*args, **kwargs)
-        print u"{}: {}".format(datetime.now(), msg)
+        print
+        u"{}: {}".format(datetime.now(), msg)
     except UnicodeEncodeError:
         pass  # squash logging errors in case of non-ascii text
     sys.stdout.flush()

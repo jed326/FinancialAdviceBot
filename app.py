@@ -7,6 +7,7 @@ import process
 import stock
 import random
 import retirement
+from watson_developer_cloud import *
 
 import requests
 from flask import Flask, request
@@ -17,7 +18,13 @@ USERNAME = "17f9272a-a613-4cd4-b4a2-d2997333d8e3"
 PASSWORD = "lTzpYkbjTsKE"
 WORKSPACE_ID = "a347dca1-629e-4bbb-af35-d51aae52bf7a"
 context = {}
-r = {"complete":False}
+r = {"complete": False}
+
+conversation = conversation_v1.ConversationV1(
+    username=USERNAME,
+    password=PASSWORD,
+    version='2016-06-20'
+)
 
 
 @app.route('/', methods=['GET'])
@@ -43,72 +50,53 @@ def webhook():
 
         for entry in data["entry"]:
             for messaging_event in entry["messaging"]:
-
+                print('###########################################')
                 if messaging_event.get("message"):  # someone sent us a message
                     global context
                     sender_id = messaging_event["sender"]["id"]  # the facebook ID of the person sending you the message
                     recipient_id = messaging_event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
                     message_text = messaging_event["message"]["text"]  # the message's text
-                    newJSON, context = process.handle_command(message_text, context)
+                    newJSON, context = process.handle_command(message_text, context, conversation)
                     message = ''
-
+                    #print(newJSON)
+                    print(json.dumps(newJSON, indent=2))
+                    print(newJSON['intents'][0]['intent'])
+                    print(newJSON['output']['text'][0])
+                    if (message_text.isdigit()):
+                        message_text = int(message_text)
                     if (newJSON['intents'][0]['intent'] == 'Stock_Price' and newJSON['output']['text'][0] == 'INTENT'):
                         message = stock.getstockprice(newJSON['entities'][0]['value'])
                         send_message(sender_id, message)
                     elif (newJSON['intents'][0]['intent'] == 'Advice' and newJSON['output']['text'][0] == 'INTENT'):
-                        f = open("InvesmentTips.txt", "r")
+                        f = open("InvestmentTips.txt", "r")
                         file = f.readlines()
                         rr = int(random.random() * 300)
                         send_message(sender_id, "investment tip #%s" % (file[rr]))
                         f.close()
                     elif message_text == "test":
                         send_message(sender_id, "test success!")
-                    elif (newJSON['intents'][0]['intent'] == 'Save_For_retirement'):
-                        r.update({"retire":True})
-                    elif (newJSON['output']['text'][0] == 'How old are you right now?'):
-                        r.update({"ageRetire":newJSON['context']['age'] })
-                    elif (newJSON['output']['text'][0] == 'How much money do you have saved up?'):
-                        r.update({"ageNow":newJSON['context']['age'] })
-                    elif (newJSON['output']['text'][0] == "What's your current income?"):
-                        r.update({"savings":newJSON['context']['age'] })
-                    elif (newJSON['output']['text'][0] == 'What is up my dude'):
-                        r.update({"incomeCurrent":newJSON['context']['age'] })
-                        r.update({"complete":True})
-                    elif (r["complete"]):
-                        x, y = retirement.calculate(r['ageNow'], r['ageRetire'], r['incomeCurrent'], r['savings']))
+                    elif (newJSON['intents'][0]['intent'] == u'Save_For_Retirement'):
+                        r.update({"retire": True})
+                        send_message(sender_id, "When do you want to retire?")
+                    elif (newJSON['output']['text'][0] == u'How old are you right now?'):
+                        r.update({"ageRetire": newJSON['context']['age']})
+                        send_message(sender_id, newJSON['output']['text'][0])
+                    elif (newJSON['output']['text'][0] == u'How much money do you have saved up?'):
+                        r.update({"ageNow": newJSON['context']['age']})
+                        send_message(sender_id, newJSON['output']['text'][0])
+                    elif (newJSON['output']['text'][0] == u"What's your current income?"):
+                        r.update({"savings": newJSON['context']['age']})
+                        send_message(sender_id, newJSON['output']['text'][0])
+                    elif (newJSON['output']['text'][0] == u'What is up my dude'):
+                        r.update({"incomeCurrent": newJSON['context']['age']})
+                        r.update({"complete": True})
+                        x, y = retirement.calculate(r['ageNow'], r['ageRetire'], r['incomeCurrent'], r['savings'])
                         r["complete"] = False
-                        send_message(sender_id, "If you save the recommended 10% of your income every year, you will retire with $%d, which will last you %d years!" %(x, y))
+                        send_message(sender_id,
+                                     "If you save the recommended 10%% of your income every year, you will retire with $%d, which will last you %d years!" % (
+                                     x, y))
                     else:
                         send_message(sender_id, newJSON['output']['text'][0])
-                    
-
-
-                    
-                    """
-                    elif (newJSON['intents'][0]['intent'] == 'FutureAge'):
-                        message = newJSON['output']['text'][0]
-                        Retirement.update({'rAge': newJSON['entities'][3]['value']})
-                        send_message(sender_id, message)
-                    elif (newJSON['intents'][0]['intent'] == 'CurrentAge'):
-                        message = newJSON['output']['text'][0]
-                        Retirement.update({'cAge': newJSON['entities'][2]['value']})
-                        send_message(sender_id, message)
-                    elif (newJSON['intents'][0]['intent'] == 'Money'):
-                        message = newJSON['output']['text'][0]
-                        if (message == "What's your current income?"):
-                            Retirement.update({'savings': newJSON['entities'][3]['value']})
-                            send_message(sender_id, message)
-                        else:
-                            Retirement.update({'income': newJSON['entities'][3]['value']})
-                            x, y = retirement.calculate(Retirement['cAge'], Retirement['rAge'], Retirement['income'],
-                                                        Retirement['savings'])
-                            send_message(sender_id,
-                                         "If you save 10% of your income for %d years, you will retire with $%d" % (
-                                         x, y))
-                    """
-                    
-
-
 
     return "ok", 200
 
